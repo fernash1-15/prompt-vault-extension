@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prompt Vault</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-left">
+        <span class="logo">⚡</span>
+        <span class="logo-text">Prompt Vault</span>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" id="searchToggleBtn" title="Search">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        </button>
+        <button class="icon-btn" id="addPromptBtn" title="New prompt">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+        <button class="icon-btn" id="manageFoldersBtn" title="Manage folders">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Search bar (hidden by default) -->
+    <div class="search-bar hidden" id="searchBar">
+      <input type="text" id="searchInput" placeholder="Search prompts…" autocomplete="off" />
+    </div>
+
+    <!-- Folder tabs -->
+    <div class="folder-tabs" id="folderTabs">
+      <button class="folder-tab active" data-folder="all">All</button>
+    </div>
+
+    <!-- Prompt list -->
+    <div class="prompt-list" id="promptList">
+      <div class="empty-state hidden" id="emptyState">
+        <span class="empty-icon">📭</span>
+        <p>No prompts here yet.</p>
+        <button class="btn-primary small" id="emptyAddBtn">Add your first prompt</button>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast hidden" id="toast"></div>
+
+    <!-- ── MODALS ── -->
+
+    <!-- View / Edit prompt modal -->
+    <div class="modal hidden" id="promptModal">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h2 id="modalTitle">Prompt</h2>
+          <button class="icon-btn close-btn" id="closePromptModal">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="field">
+            <label>Title</label>
+            <input type="text" id="modalTitleInput" placeholder="Give this prompt a name" />
+          </div>
+          <div class="field">
+            <label>Prompt</label>
+            <textarea id="modalBodyInput" rows="7" placeholder="Paste or type your prompt…"></textarea>
+          </div>
+          <div class="field-row">
+            <div class="field half">
+              <label>Folder</label>
+              <select id="modalFolderSelect"></select>
+            </div>
+            <div class="field half">
+              <label>Tags <span class="hint">(comma-separated)</span></label>
+              <input type="text" id="modalTagsInput" placeholder="e.g. email, sales" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <div class="modal-footer-left">
+            <button class="btn-danger" id="deletePromptBtn">Delete</button>
+          </div>
+          <div class="modal-footer-right">
+            <button class="btn-secondary" id="cancelPromptBtn">Cancel</button>
+            <button class="btn-primary" id="savePromptBtn">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Folder manager modal -->
+    <div class="modal hidden" id="folderModal">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h2>Manage Folders</h2>
+          <button class="icon-btn close-btn" id="closeFolderModal">✕</button>
+        </div>
+        <div class="modal-body">
+          <div id="folderList" class="folder-manager-list"></div>
+          <div class="new-folder-row">
+            <input type="text" id="newFolderName" placeholder="New folder name…" />
+            <input type="text" id="newFolderIcon" placeholder="🗂️" maxlength="2" />
+            <input type="color" id="newFolderColor" value="#6366f1" />
+            <button class="btn-primary small" id="addFolderBtn">Add</button>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <div class="modal-footer-right">
+            <button class="btn-primary" id="closeFolderModalBtn">Done</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick-use modal (copy / edit / insert) -->
+    <div class="modal hidden" id="useModal">
+      <div class="modal-box compact">
+        <div class="modal-header">
+          <h2 id="useModalTitle"></h2>
+          <button class="icon-btn close-btn" id="closeUseModal">✕</button>
+        </div>
+        <div class="modal-body">
+          <textarea id="useModalBody" rows="7"></textarea>
+        </div>
+        <div class="modal-footer use-footer">
+          <button class="use-btn copy-btn" id="useCopyBtn">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy
+          </button>
+          <button class="use-btn insert-btn" id="useInsertBtn">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/></svg>
+            Insert
+          </button>
+          <button class="use-btn edit-link" id="useEditBtn">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit prompt
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
