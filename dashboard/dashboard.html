@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prompt Vault — Dashboard</title>
+  <link rel="stylesheet" href="dashboard.css" />
+</head>
+<body>
+  <div class="layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-icon">⚡</span>
+        <div>
+          <div class="brand-name">Prompt Vault</div>
+          <div class="brand-sub">Usage Dashboard</div>
+        </div>
+      </div>
+      <nav class="nav">
+        <button class="nav-item active" data-view="overview">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          Overview
+        </button>
+        <button class="nav-item" data-view="prompts">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          All Prompts
+        </button>
+        <button class="nav-item" data-view="folders">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          By Folder
+        </button>
+        <button class="nav-item" data-view="tags">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+          By Tag
+        </button>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="refresh-btn" id="refreshBtn">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          Refresh data
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main">
+
+      <!-- ── OVERVIEW VIEW ── -->
+      <section class="view active" id="view-overview">
+        <div class="page-header">
+          <h1>Overview</h1>
+          <span class="last-updated" id="lastUpdated">–</span>
+        </div>
+
+        <!-- Stat cards -->
+        <div class="stat-grid" id="statGrid">
+          <div class="stat-card accent">
+            <div class="stat-label">Total prompts</div>
+            <div class="stat-value" id="statTotal">–</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Total uses</div>
+            <div class="stat-value" id="statUses">–</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Folders</div>
+            <div class="stat-value" id="statFolders">–</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Unique tags</div>
+            <div class="stat-value" id="statTags">–</div>
+          </div>
+        </div>
+
+        <!-- Charts row -->
+        <div class="charts-row">
+          <!-- Top prompts bar chart -->
+          <div class="chart-card wide">
+            <div class="chart-title">Most used prompts</div>
+            <div id="topPromptsChart" class="bar-chart"></div>
+            <div class="chart-empty hidden" id="topPromptsEmpty">No usage data yet — start using your prompts!</div>
+          </div>
+
+          <!-- Folder distribution donut -->
+          <div class="chart-card">
+            <div class="chart-title">Prompts by folder</div>
+            <div class="donut-wrap">
+              <canvas id="donutCanvas" width="180" height="180"></canvas>
+              <div class="donut-legend" id="donutLegend"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Activity heatmap placeholder -->
+        <div class="chart-card full">
+          <div class="chart-title">Usage leaderboard</div>
+          <div id="leaderboard" class="leaderboard"></div>
+        </div>
+      </section>
+
+      <!-- ── PROMPTS VIEW ── -->
+      <section class="view" id="view-prompts">
+        <div class="page-header">
+          <h1>All Prompts</h1>
+          <input class="search-input" id="promptSearch" placeholder="Search…" />
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="promptsTable">
+            <thead>
+              <tr>
+                <th class="sortable" data-col="title">Title <span class="sort-icon">↕</span></th>
+                <th class="sortable" data-col="folder">Folder <span class="sort-icon">↕</span></th>
+                <th>Tags</th>
+                <th class="sortable" data-col="usageCount">Uses <span class="sort-icon">↕</span></th>
+                <th class="sortable" data-col="createdAt">Created <span class="sort-icon">↕</span></th>
+              </tr>
+            </thead>
+            <tbody id="promptsTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ── FOLDERS VIEW ── -->
+      <section class="view" id="view-folders">
+        <div class="page-header"><h1>By Folder</h1></div>
+        <div id="foldersGrid" class="folders-grid"></div>
+      </section>
+
+      <!-- ── TAGS VIEW ── -->
+      <section class="view" id="view-tags">
+        <div class="page-header"><h1>By Tag</h1></div>
+        <div id="tagsCloud" class="tags-cloud"></div>
+        <div id="tagDetail" class="tag-detail hidden">
+          <div class="tag-detail-header">
+            <span id="tagDetailName"></span>
+            <button class="close-tag" id="closeTagDetail">✕</button>
+          </div>
+          <div id="tagDetailList" class="tag-detail-list"></div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="dashboard.js"></script>
+</body>
+</html>
